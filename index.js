@@ -45,7 +45,7 @@ module.exports = async function () {
 
   if (email) {
     try {
-      const knownData = await fs.readJson('data.json');
+      const { data: knownData } = await fs.readJson('data.json');
       const keys = Object.keys(data);
       let content = '';
       for (const key of keys) {
@@ -71,7 +71,7 @@ Thanks!
     }
   }
 
-  await fs.writeJson('data.json', data, { spaces: 2 });
+  await fs.writeJson('data.json', { stamp: new Date(), data }, { spaces: 2 });
 };
 
 module.exports = module.exports();
