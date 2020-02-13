@@ -1,12 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
-let email;
-try {
-  email = require('../self-email');
-}
-catch (error) {
-  // Ignore missing email on the system
-}
+const email = require('../self-email');
+const headers = require('../self-email/headers');
 
 module.exports = async function () {
   const userName = process.argv[2] || process.env.SPOTIFY_USER_NAME;
@@ -24,7 +19,7 @@ module.exports = async function () {
     throw new Error('The artist ID must be passed in as the first command line argument or in the SPOTIFY_ARTIST_ID environment variable.');
   }
 
-  const headless = true;
+  const headless = false;
   const browser = await puppeteer.launch({ headless });
   const [page] = await browser.pages();
   await page.goto('https://accounts.spotify.com/en/login/');
@@ -53,18 +48,7 @@ module.exports = async function () {
         content += `<li>${key} ${change} ${data[key]}</li>\n`;
       }
 
-      await email(`
-From: Spotify for Artists <bot@hubelbauer.net>
-To: Tomas Hubelbauer <tomas@hubelbauer.net>
-Subject: Spotify for Artists Digest
-Content-Type: text/html
-
-<ul>
-${content}
-</ul>
-
-Thanks!
-`);
+      await email(headers('Spotify', 'Stats'), `<ul>${content}</ul>`, 'Thanks');
     }
     catch (error) {
       // Ignore no data being known yet
