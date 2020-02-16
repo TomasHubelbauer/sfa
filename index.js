@@ -44,8 +44,20 @@ module.exports = async function () {
       const keys = Object.keys(data);
       let content = '';
       for (const key of keys) {
-        const change = ['decreased to', 'remains at', 'increased to'][Math.sign(data[key] - knownData[key]) + 1];
-        content += `<li>${key} ${change} ${data[key]}</li>\n`;
+        switch (Math.sign(data[key] - knownData[key])) {
+          case -1: {
+            content += `<li>${key} decreased by ${knownData[key] - data[key]} to ${data[key]}</li>`;
+            break;
+          }
+          case 0: {
+            content += `<li>${key} remains at ${data[key]}</li>`;
+            break;
+          }
+          case 1: {
+            content += `<li>${key} increased by ${data[key] - knownData[key]} to ${data[key]}</li>`;
+            break;
+          }
+        }
       }
 
       await email(headers('Spotify', 'Stats'), `<ul>${content}</ul>`, 'Thanks');
