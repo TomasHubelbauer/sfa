@@ -2,6 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const email = require('../self-email');
 const headers = require('../self-email/headers');
+const footer = require('../self-email/footer');
 
 module.exports = async function () {
   const userName = process.argv[2] || process.env.SPOTIFY_USER_NAME;
@@ -38,33 +39,35 @@ module.exports = async function () {
     return a;
   }, {});
 
-  if (email) {
-    try {
-      const { data: knownData } = await fs.readJson('data.json');
-      const keys = Object.keys(data);
-      let content = '';
-      for (const key of keys) {
-        switch (Math.sign(data[key] - knownData[key])) {
-          case -1: {
-            content += `<li>${key} decreased by ${knownData[key] - data[key]} to ${data[key]}</li>`;
-            break;
-          }
-          case 0: {
-            content += `<li>${key} remains at ${data[key]}</li>`;
-            break;
-          }
-          case 1: {
-            content += `<li>${key} increased by ${data[key] - knownData[key]} to ${data[key]}</li>`;
-            break;
-          }
+  try {
+    const { data: knownData } = await fs.readJson('data.json');
+    const keys = Object.keys(data);
+    let content = '';
+    for (const key of keys) {
+      switch (Math.sign(data[key] - knownData[key])) {
+        case -1: {
+          content += `<li>${key} decreased by ${knownData[key] - data[key]} to ${data[key]}</li>`;
+          break;
+        }
+        case 0: {
+          content += `<li>${key} remains at ${data[key]}</li>`;
+          break;
+        }
+        case 1: {
+          content += `<li>${key} increased by ${data[key] - knownData[key]} to ${data[key]}</li>`;
+          break;
         }
       }
+    }
 
-      await email(headers('Spotify', 'Stats'), `<ul>${content}</ul>`, 'Thanks');
-    }
-    catch (error) {
-      // Ignore no data being known yet
-    }
+    await email(
+      headers('Stats', 'Spotify'),
+      `<ul>${content}</ul>`,
+      ...footer('Spotify')
+    );
+  }
+  catch (error) {
+    // Ignore no data being known yet
   }
 
   await fs.writeJson('data.json', { stamp: new Date(), data }, { spaces: 2 });
