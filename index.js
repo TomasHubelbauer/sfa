@@ -1,8 +1,7 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const email = require('../self-email');
-const headers = require('../self-email/headers');
-const footer = require('../self-email/footer');
+const { eml, subject, sender, recipient } = require('../self-email');
 
 module.exports = async function () {
   const userName = process.argv[2] || process.env.SPOTIFY_USER_NAME;
@@ -61,9 +60,12 @@ module.exports = async function () {
     }
 
     await email(
-      headers('Stats', 'Spotify'),
-      `<ul>${content}</ul>`,
-      ...footer('Spotify')
+      eml(
+        subject('Spotify'),
+        sender('Spotify <bot+spotify@hubelbauer.net>'),
+        recipient('Tomas Hubelbauer <tomas@hubelbauer.net>'),
+        `<ul>${content}</ul>`,
+      )
     );
   }
   catch (error) {
