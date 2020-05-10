@@ -1,5 +1,6 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
+const path = require('path');
 const email = require('../self-email');
 const { eml, subject, sender, recipient } = require('../self-email');
 
@@ -39,7 +40,8 @@ module.exports = async function () {
   }, {});
 
   try {
-    const { data: knownData } = await fs.readJson('data.json');
+    const dataJsonFilePath = path.join(__dirname, 'data.json');
+    const { data: knownData } = await fs.readJson(dataJsonFilePath);
     const keys = Object.keys(data);
     let content = '';
     for (const key of keys) {
@@ -72,7 +74,9 @@ module.exports = async function () {
     // Ignore no data being known yet
   }
 
-  await fs.writeJson('data.json', { stamp: new Date(), data }, { spaces: 2 });
+  await fs.writeJson(dataJsonFilePath, { stamp: new Date(), data }, { spaces: 2 });
 };
 
-module.exports = module.exports();
+if (process.cwd() === __dirname) {
+  module.exports();
+}
