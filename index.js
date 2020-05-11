@@ -1,21 +1,19 @@
 const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const path = require('path');
-const email = require('../self-email');
-const { eml, subject, sender, recipient } = require('../self-email');
 
-module.exports = async function () {
-  const userName = process.argv[2] || process.env.SPOTIFY_USER_NAME;
+module.exports = async function (userName, password, artistId) {
+  userName = userName || process.env.SPOTIFY_USER_NAME;
   if (!userName) {
     throw new Error('The user name must be passed in as the first command line argument or in the SPOTIFY_USER_NAME environment variable.');
   }
 
-  const password = process.argv[3] || process.env.SPOTIFY_PASSWORD;
+  password = password || process.env.SPOTIFY_PASSWORD;
   if (!password) {
     throw new Error('The password must be passed in as the first command line argument or in the SPOTIFY_PASSWORD environment variable.');
   }
 
-  const artistId = process.argv[4] || process.env.SPOTIFY_ARTIST_ID;
+  artistId = artistId || process.env.SPOTIFY_ARTIST_ID;
   if (!artistId) {
     throw new Error('The artist ID must be passed in as the first command line argument or in the SPOTIFY_ARTIST_ID environment variable.');
   }
@@ -39,8 +37,8 @@ module.exports = async function () {
     return a;
   }, {});
 
+  const dataJsonFilePath = path.join(__dirname, 'data.json');
   try {
-    const dataJsonFilePath = path.join(__dirname, 'data.json');
     const { data: knownData } = await fs.readJson(dataJsonFilePath);
     const keys = Object.keys(data);
     let content = '';
@@ -60,23 +58,15 @@ module.exports = async function () {
         }
       }
     }
-
-    await email(
-      eml(
-        subject('Spotify'),
-        sender('Spotify <bot+spotify@hubelbauer.net>'),
-        recipient('Tomas Hubelbauer <tomas@hubelbauer.net>'),
-        `<ul>${content}</ul>`,
-      )
-    );
   }
   catch (error) {
     // Ignore no data being known yet
   }
 
   await fs.writeJson(dataJsonFilePath, { stamp: new Date(), data }, { spaces: 2 });
+  return [`<ul>${content}</ul>`];
 };
 
 if (process.cwd() === __dirname) {
-  module.exports();
+  module.exports(process.argv[2], process.argv[3], process.argv[4]).then(console.log);
 }
