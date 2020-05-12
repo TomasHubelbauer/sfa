@@ -37,11 +37,11 @@ module.exports = async function (userName, password, artistId) {
     return a;
   }, {});
 
+  let content = '';
   const dataJsonFilePath = path.join(__dirname, 'data.json');
   try {
     const { data: knownData } = await fs.readJson(dataJsonFilePath);
     const keys = Object.keys(data);
-    let content = '';
     for (const key of keys) {
       switch (Math.sign(data[key] - knownData[key])) {
         case -1: {
