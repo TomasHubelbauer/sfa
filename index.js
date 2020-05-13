@@ -45,7 +45,7 @@ module.exports = async function (userName, password, artistId) {
     for (const key of keys) {
       switch (Math.sign(data[key] - knownData[key])) {
         case -1: {
-          content += `<li>${key} decreased by ${knownData[key] - data[key]} to ${data[key]}</li>`;
+          content += `<li>${key} decreased by <b>${knownData[key] - data[key]}</b> to ${data[key]}</li>`;
           break;
         }
         case 0: {
@@ -53,7 +53,7 @@ module.exports = async function (userName, password, artistId) {
           break;
         }
         case 1: {
-          content += `<li>${key} increased by ${data[key] - knownData[key]} to ${data[key]}</li>`;
+          content += `<li>${key} increased by <b>${data[key] - knownData[key]}</b> to ${data[key]}</li>`;
           break;
         }
       }
