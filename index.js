@@ -2,7 +2,7 @@ const puppeteer = require('puppeteer');
 const fs = require('fs-extra');
 const path = require('path');
 
-module.exports = async function (userName, password, artistId) {
+module.exports = async function (userName, password, artistId, headless) {
   userName = userName || process.env.SPOTIFY_USER_NAME;
   if (!userName) {
     throw new Error('The user name must be passed in as the first command line argument or in the SPOTIFY_USER_NAME environment variable.');
@@ -18,7 +18,6 @@ module.exports = async function (userName, password, artistId) {
     throw new Error('The artist ID must be passed in as the first command line argument or in the SPOTIFY_ARTIST_ID environment variable.');
   }
 
-  const headless = false;
   const browser = await puppeteer.launch({ headless });
   const [page] = await browser.pages();
   await page.goto('https://accounts.spotify.com/en/login/');
@@ -37,36 +36,41 @@ module.exports = async function (userName, password, artistId) {
     return a;
   }, {});
 
-  let content = '';
+  let email = '<p>Black Holes Spotify performance:</p>';
   const dataJsonFilePath = path.join(__dirname, 'data.json');
   try {
     const { data: knownData } = await fs.readJson(dataJsonFilePath);
     const keys = Object.keys(data);
+    email += '<ul>\n';
     for (const key of keys) {
       switch (Math.sign(data[key] - knownData[key])) {
         case -1: {
-          content += `<li>${key} decreased by <b>${knownData[key] - data[key]}</b> to ${data[key]}</li>`;
+          email += `<li>${key} decreased by <b>${knownData[key] - data[key]}</b> to ${data[key]}</li>\n`;
           break;
         }
         case 0: {
-          content += `<li>${key} remains at ${data[key]}</li>`;
+          email += `<li>${key} remains at ${data[key]}</li>\n`;
           break;
         }
         case 1: {
-          content += `<li>${key} increased by <b>${data[key] - knownData[key]}</b> to ${data[key]}</li>`;
+          email += `<li>${key} increased by <b>${data[key] - knownData[key]}</b> to ${data[key]}</li>\n`;
           break;
         }
       }
     }
+
+    email += '</ul>\n';
   }
   catch (error) {
     // Ignore no data being known yet
   }
 
   await fs.writeJson(dataJsonFilePath, { stamp: new Date(), data }, { spaces: 2 });
-  return [`<ul>${content}</ul>`];
+
+  const indexEmlFilePath = path.join(__dirname, 'index.eml');
+  await fs.writeFile(indexEmlFilePath, email);
 };
 
 if (process.cwd() === __dirname) {
-  module.exports(process.argv[2], process.argv[3], process.argv[4]).then(console.log);
+  module.exports(process.argv[2], process.argv[3], process.argv[4], false);
 }
